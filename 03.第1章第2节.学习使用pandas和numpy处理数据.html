@@ -1,0 +1,581 @@
+<!DOCTYPE html []>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="author" content="MarkdownViewer++" />
+    <title>03.第1章第2节.学习使用pandas和numpy处理数据.md</title>
+    <style type="text/css">
+            
+/* Avoid page breaks inside the most common attributes, especially for exports (i.e. PDF) */
+td, h1, h2, h3, h4, h5, p, ul, ol, li {
+    page-break-inside: avoid; 
+}
+
+        </style>
+  </head>
+  <body>
+    <h1 id="pandas-numpy">使用 Pandas 和 NumPy 高效处理数据</h1>
+    <ul>
+      <li>掌握 NumPy 数组操作与向量化计算</li>
+      <li>熟练使用 Pandas 进行数据读取、清洗、转换与分析</li>
+      <li>能独立完成真实数据集的预处理流程</li>
+    </ul>
+    <h4 id="pandasnumpy">安装pandas和numpy</h4>
+    <pre>
+      <code>pip install pandas
+pip install numpy
+pip uninstall numpy
+pip install numpy==2.0.2
+</code>
+    </pre>
+    <p>一般情况下numpy和pandas都按照的有，如果没有安装就使用上面的命令安装。还可以安装指定版本的numpy。</p>
+    <h4 id="pandasnumpy-1">pandas和numpy的使用场景</h4>
+    <ul>
+      <li>numpy适合纯数值计算或高纬数组的运算。核心数值计算，向量矩阵的运算。</li>
+      <li>pandas适合带有标签的结构化数据，比如表格数据.数据的读写、清洗、筛选、聚合</li>
+    </ul>
+    <p>下面的示例都是尽量介绍通用的函数，新的函数可能旧版本的不支持。</p>
+    <h2 id="section">0.数据读取与导出</h2>
+    <h4 id="pandasnumpy2">导入pandas和numpy这2个包</h4>
+    <pre>
+      <code>import pandas as pd
+import numpy as np
+</code>
+    </pre>
+    <p>
+      <code>cd /mnt/e/MearchineLearning/传统机器学习/data/titanic/</code>
+    </p>
+    <h4 id="section-1">读取文件</h4>
+    <p>此处使用的是泰坦尼克号的数据集,可以关注公众号“小猫学生信”，发送“泰坦尼克”或“titanic”获取数据集。</p>
+    <ul>
+      <li>
+        <p>读取csv文件
+<code>df= pd.read_csv('train.csv',encoding='utf-8')</code></p>
+      </li>
+      <li>
+        <p>读取tsv文件,通过sep参数指定分隔符
+<code>df=pd.read_csv('train.txt',sep="\t")</code></p>
+      </li>
+      <li>
+        <p>使用read_table读取tsv文件
+<code>df=pd.read_table('train.txt')</code></p>
+      </li>
+      <li>
+        <p>读取指定行数,此处是读取前20行
+<code>df=pd.read_table('train.csv',sep=",",nrows=20)</code>
+读取指定行数对于大文件的快速查看非常具体实际意义。</p>
+      </li>
+      <li>
+        <p>读取指定列数</p>
+        <ul>
+          <li>
+            <p>
+              <code>df=pd.read_csv('train.csv',usecols=[0,1,4,6])</code> 只读取第0,1,4,6列</p>
+          </li>
+          <li>
+            <p>
+              <code>df=pd.read_csv('train.csv',usecols=['PassengerId','Fare'])</code> 读取指定列名的列</p>
+          </li>
+        </ul>
+      </li>
+      <li>
+        <p>读取excel文件 <code>pd.read_excel()</code></p>
+      </li>
+      <li>
+        <p>读取时指定索引列
+此处是指定第0列是索引列。
+<code>df=pd.read_table('train.txt',index_col=0)</code>
+默认情况下是不指定索引列的，索引列的值需要时唯一的值。</p>
+        <ul>
+          <li>
+            <code>index_col=False</code> 不指定列为索引列</li>
+          <li>
+            <code>index_col=1</code>	指定第1列是索引列</li>
+          <li>
+            <code>index_col=[1,4]</code> 指定第1列和第4列为索引列</li>
+          <li>
+            <code>index_col="PassengerId"</code>指定PassengerId列为索引列</li>
+          <li>
+            <code>index_col=["PassengerId","Fare"]</code>指定PassengerId列和Fare列为索引列</li>
+        </ul>
+      </li>
+      <li>
+        <p>读取时指定表头
+默认是指定第0行，为表头。</p>
+        <ul>
+          <li>
+            <code>df=pd.read_table('train.txt',header=0)</code> 指定第0行，为表头</li>
+          <li>
+            <code>df=pd.read_table('train.txt',header=1)</code> 指定第1行，为表头</li>
+          <li>
+            <code>df=pd.read_table('train.txt',header=None)</code> 不指定表头</li>
+        </ul>
+      </li>
+      <li>
+        <p>读取时指定新的列名(适用于文件没有列名，在读取时指定)
+<code>df=pd.read_csv('train.csv',names=['用户ID','生存情况','船舱等级'],usecols=[0,1,2])</code></p>
+      </li>
+      <li>
+        <p>读取时跳过行</p>
+        <ul>
+          <li>
+            <code>df=pd.read_csv('train.csv',skiprows=100)</code> 跳过前100行。</li>
+          <li>
+            <code>df=pd.read_csv('train.csv',skiprows=[0,2])</code> 跳过第0行和第2行。</li>
+          <li>
+            <code>df=pd.read_csv('train.csv',skiprows=lambda x : x % 2 != 0)</code> 读取奇数行</li>
+          <li>
+            <code>df=pd.read_csv('train.csv',skiprows=lambda x : x % 2 == 0)</code> 读取偶数行</li>
+          <li>
+            <code>df=pd.read_csv('train.csv',comment='#')</code> 跳过开始是#的行</li>
+        </ul>
+      </li>
+    </ul>
+    <h4 id="section-2">读取时缺失值的处理</h4>
+    <ul>
+      <li>手动指定缺失值的格式
+<code>df=pd.read_csv('train.csv',na_values=['N/A','NULL','','-'])</code></li>
+      <li>指定缺失值的格式同时保留默认的规则
+<code>df=pd.read_csv('train.csv',na_values=['N/A','NULL','','-'],keep_default_na=True)</code></li>
+    </ul>
+    <h4 id="section-3">输出文件</h4>
+    <pre>
+      <code>df.to_csv('train.txt',sep='\t',index=False)
+df.to_csv('output.csv', sep='|', header=True, index=False, encoding='utf-8')
+</code>
+    </pre>
+    <p>输出时</p>
+    <ul>
+      <li>seq指定分隔符</li>
+      <li>header指定是否输出列名，默认是输出的。</li>
+      <li>index指定是否输出索引列，默认是输出的。</li>
+      <li>encoding指定输出文件编码格式，因为多语言下可能会乱码。</li>
+    </ul>
+    <h2 id="section-4">1.数据结构和基本操作</h2>
+    <h4 id="section-5">查看数据</h4>
+    <h5 id="n">查看前n行</h5>
+    <ul>
+      <li>
+        <code>df.head()</code> 查看前5行</li>
+      <li>
+        <code>df.head(18)</code> 查看前18行</li>
+    </ul>
+    <h5 id="n-1">查看后n行</h5>
+    <ul>
+      <li>
+        <code>df.tail()</code> 查看最后5行</li>
+      <li>
+        <code>df.tail(8)</code> 查看最后8行</li>
+    </ul>
+    <h5 id="section-6">查看数据框每列的数量</h5>
+    <p>
+      <code>df.count()</code>
+    </p>
+    <pre>
+      <code>PassengerId    891
+Survived       891
+Pclass         891
+Sex            891
+Age            714
+SibSp          891
+Parch          891
+Fare           891
+Cabin          204
+Embarked       889
+dtype: int64
+</code>
+    </pre>
+    <h5 id="section-7">查看数据框的结构</h5>
+    <p>
+      <code>df.info()</code>
+会输出数据框的结构，</p>
+    <ul>
+      <li>每列的数据类型</li>
+      <li>每列的非空值的数量</li>
+      <li>数据框占用的内存的大小</li>
+      <li>数据框每列的列名</li>
+    </ul>
+    <pre>
+      <code>&lt;class 'pandas.core.frame.DataFrame'&gt;
+RangeIndex: 891 entries, 0 to 890
+Data columns (total 10 columns):
+ #   Column       Non-Null Count  Dtype
+---  ------       --------------  -----
+ 0   PassengerId  891 non-null    int64
+ 1   Survived     891 non-null    int64
+ 2   Pclass       891 non-null    int64
+ 3   Sex          891 non-null    object
+ 4   Age          714 non-null    float64
+ 5   SibSp        891 non-null    int64
+ 6   Parch        891 non-null    int64
+ 7   Fare         891 non-null    float64
+ 8   Cabin        204 non-null    object
+ 9   Embarked     889 non-null    object
+dtypes: float64(2), int64(5), object(3)
+memory usage: 69.7+ KB
+</code>
+    </pre>
+    <p>#####查看数据框的数据均值和极值</p>
+    <ul>
+      <li>
+        <code>df.describe()</code>
+      </li>
+    </ul>
+    <pre>
+      <code>    PassengerId    Survived      Pclass         Age       SibSp       Parch        Fare
+count   891.000000  891.000000  891.000000  714.000000  891.000000  891.000000  891.000000
+mean    446.000000    0.383838    2.308642   29.699118    0.523008    0.381594   32.204208
+std     257.353842    0.486592    0.836071   14.526497    1.102743    0.806057   49.693429
+min       1.000000    0.000000    1.000000    0.420000    0.000000    0.000000    0.000000
+25%     223.500000    0.000000    2.000000   20.125000    0.000000    0.000000    7.910400
+50%     446.000000    0.000000    3.000000   28.000000    0.000000    0.000000   14.454200
+75%     668.500000    1.000000    3.000000   38.000000    1.000000    0.000000   31.000000
+max     891.000000    1.000000    3.000000   80.000000    8.000000    6.000000  512.329200
+</code>
+    </pre>
+    <p>包含每列的非空值的数量，均值，标准差，最小值和最大值。</p>
+    <h4 id="numpydataframe">从字典、列表、numpy数组创建DataFrame</h4>
+    <pre>
+      <code>#创建1个字典
+customer={
+    'name': ['Alice', 'BobLi', 'Charlie'],
+    'age': [25, 30, 35],
+    'salary': [50000, 40000, 70000]
+}
+
+df=pd.DataFrame(customer) #把字典转为数据框
+location=['Hongkong','Peking','Xi\'an'] #创建一个列表
+df['location']=location #新增一列
+
+</code>
+    </pre>
+    <h4 id="section-8">索引和列的选择（切片） 难点和重点</h4>
+    <p>#####添加、删除列</p>
+    <ul>
+      <li>
+        <p>添加列</p>
+        <ul>
+          <li>方法1：直接赋值
+<code>df['location']=location</code></li>
+          <li>方法2：插入到指定为止insert()
+<code>df.insert(loc=1,column='location2',value=location)</code>
+在第1列的位置插入列表location</li>
+        </ul>
+      </li>
+      <li>
+        <p>删除列</p>
+        <ul>
+          <li>
+            <p>方法1： 删除后需要赋值
+<code>df2=df.drop(columns=['location','age'])</code></p>
+          </li>
+          <li>
+            <p>方法2：原地修改不返回新对象
+<code>df.drop(columns=['location','age'],inplace=True)</code></p>
+          </li>
+          <li>
+            <p>方法3：del语句
+<code>del df['location']</code> #原地操作</p>
+          </li>
+          <li>
+            <p>方法4：选择保留列
+<code>df = df[['name','age','salary']]</code></p>
+          </li>
+        </ul>
+      </li>
+    </ul>
+    <h2 id="ilocloc">2.iloc和loc的使用</h2>
+    <p>两者的区别：</p>
+    <ul>
+      <li>iloc是基于具体位置，明确第几行第几列时使用。iloc的右侧是开区间。</li>
+      <li>loc相对更加安全、可读性高、不易出错。loc的右侧区间是闭区间。</li>
+    </ul>
+    <p>
+      <code>df.loc[行名，列名]</code>
+    </p>
+    <h3 id="section-9">筛选满足条件的所有列</h3>
+    <p>
+      <code>df.loc[df['age']&gt;25]</code>
+    </p>
+    <h3 id="section-10">筛选满足条件的指定列</h3>
+    <p>
+      <code>df.loc[df['age']&gt;25,['salary','name']]</code>
+    </p>
+    <h3 id="section-11">筛选多个条件,每个条件内部使用小括号包裹住。</h3>
+    <p>
+      <code>df.loc[(df['age']&gt;25) &amp; (df['salary']&gt;50000)]</code>
+    </p>
+    <h3 id="section-12">设置行名(索引)</h3>
+    <ul>
+      <li>把其中一列转为行名 <code>df.set_index('name')</code>此时需赋值给新的变量</li>
+      <li>直接修改原始数据框，把其中一列转为行名 <code>df.set_index('name',inplace=True)</code></li>
+      <li>使用外部的数组作为行名(先给数据框增加新的列，然后使用这列作为行的索引)</li>
+    </ul>
+    <pre>
+      <code>df['new_index']=['first','second','third']
+df.set_index('new_index')
+</code>
+    </pre>
+    <ul>
+      <li>取消自定义的行索引，恢复到默认的0,1,2</li>
+    </ul>
+    <pre>
+      <code>df2=df.set_index('new_index')
+df2.reset_index() #把原来的索引列转变为1列正常的列，索引恢复为默认数字
+df2.reset_index(drop=True) #不保留原来的索引列，索引恢复为默认数字
+</code>
+    </pre>
+    <h3 id="section-13">选择行</h3>
+    <p>新增一列 <code>df['gender']=['man','woman','man']</code></p>
+    <ul>
+      <li>筛选指定行</li>
+    </ul>
+    <pre>
+      <code>df['new_index']=['first','second','third']
+df.set_index('new_index',inplace=True) #原地修改，增加行名
+df.loc['first'] #筛选行名是first的行
+df.loc['first':'third'] #筛选first行到third行
+df.loc[['first','third']] #筛选first和third行
+</code>
+    </pre>
+    <ul>
+      <li>根据字符串筛选特定行
+<ul><li>筛选以s开头的行名的所有行 <code>df[df.index.str.startswith('s')]</code></li><li>筛选行名包含s的所有行，case=False是控制忽略大小写 <code>df[df.index.str.contains('a'),case=False]</code></li><li>筛选行名以指定字符串t结尾的行 <code>df[df.index.str.endswith('t')]</code></li><li>筛选行名满足正则条件的行 <code>df[df.index.str.match(r'^f')]</code></li></ul></li>
+    </ul>
+    <h3 id="section-14">选择列</h3>
+    <ul>
+      <li>选择name列到salary列 <code>df.loc[:,'name':'salary']</code></li>
+      <li>选择多列， <code>df[['name','salary']]</code></li>
+      <li>选择列名满足指定条件的列
+<ul><li>筛选列名包含<code>a</code>字符串的列 <code>df.filter(like='a')</code></li><li>正则筛选列名，以<code>n</code>开头的列 <code>df.filter(regex=r'^n')</code></li><li>筛选列名以指定字符串结尾的列 <code>df.filter(regex=r'e$')</code></li></ul></li>
+      <li>排除列</li>
+    </ul>
+    <pre>
+      <code>un_use_col=['location','age']
+df2=df.drop(columns=un_use_col) #这里是删除了不用的列赋值给新的变量
+df3=df[df.columns.difference(un_use_col)] #这里是排除了不用的列赋值给新的变量
+</code>
+    </pre>
+    <p>df2和df3的内容是相同的。</p>
+    <h2 id="iloc">iloc进行筛选</h2>
+    <p>iloc筛选是基于数字位置索引，所以区间是左闭右开。不包含右边区间的值。注意区间的格式是<code>整数:整数</code><code>df.iloc[x轴,y轴]</code></p>
+    <ul>
+      <li>
+        <code>df.iloc[0,1:3]</code> 获取第0行，第1列到第2列</li>
+      <li>
+        <code>df.iloc[:,1:]</code> 获取所有行的第1列到最后一列</li>
+      <li>
+        <code>df.iloc[0:2,:]</code> 获取第0行到第1行的所有列</li>
+      <li>
+        <code>df.iloc[[0,3]]</code> 获取第0行和第2行。</li>
+      <li>
+        <code>df.iloc[:,[0,3]]</code> 获取第0和第2列。</li>
+    </ul>
+    <h1 id="numpy">3.使用numpy对数组进行操作</h1>
+    <p>
+      <em>注意：数组的维度最小是1，要和数组的索引是从0开始区分开。</em>
+    </p>
+    <h2 id="numpy-1">numpy创建数组</h2>
+    <pre>
+      <code>list1=[1,3,5,7,8,'test','True',100]
+new_arr=np.array(list1) #把列表转为1维数组
+new_arr2=new_arr.reshape(2,4) #把1维度数组转为2维度，此处是2行4列
+new_arr2.reshape(8)  #把2维度数组转回1维
+new_arr3=new_arr2.reshape(1,4,2) #把2维度数组转为3个维度
+</code>
+    </pre>
+    <h2 id="section-15">获取数组的信息</h2>
+    <ul>
+      <li>获取数组元素的总数<code>.size</code><code>new_arr.size</code></li>
+      <li>获取多维度数组的维度<code>.shape</code><ul><li><code>new_arr2.shape</code> 获得所有维度的长度</li><li><code>new_arr2.shape[0]</code>  获得第0个维度的长度`</li><li><code>len(new_arr2)</code> 无论有多少个维度，都是获取第0个维度的长度</li></ul></li>
+      <li>获取数组有多少个维度<code>.ndim</code><code>new_arr2.ndim</code>  返回2</li>
+    </ul>
+    <p>
+      <code>new_arr3.ndim</code> 返回3</p>
+    <h2 id="array">array索引和切片</h2>
+    <pre>
+      <code>arr=np.arange(1,16).reshape(3,5) #创建3行5列数组
+
+arr[-1,-1] #15 获取最后一行最后一列的那个元素
+arr[:,4] #获取第4列的值，
+arr[arr&gt;3] #获取数组中所有大于3的元素，返回是1维的数组
+</code>
+    </pre>
+    <h2 id="broadcasting-numpy">广播机制(Broadcasting) 这是numpy的核心优势，相比于传统循环加速最明显 难点和重点</h2>
+    <p>主要是深度学习需要用到矩阵和数组的运算</p>
+    <p>Broadcasting的作用是在执行算数运算时，自动将性状较小的数组扩展以匹配较大数组的形状，从而完成逐个元素运算。</p>
+    <h4 id="section-16">标量和数组的运算</h4>
+    <pre>
+      <code>arr=np.array([1,3,5])
+scale=10
+result=arr*scale
+print(result)
+</code>
+    </pre>
+    <p>标量可以和任意数组运算</p>
+    <h4 id="section-17">向量和矩阵的运算</h4>
+    <pre>
+      <code>A = np.array([[1,3,5],[2,4,8]])
+B = np.array([-1,25,10])
+result2 = A + B
+print(result2)
+</code>
+    </pre>
+    <h4 id="section-18">列向量和行向量</h4>
+    <pre>
+      <code>row=np.array([1,2,3])
+col=np.array([[25],[22]]) 
+row + col 
+</code>
+    </pre>
+    <h2 id="numpy-2">常用的numpy内置函数</h2>
+    <ul>
+      <li>按行求和，压缩列 <code>np.sum(arr,axis=1)</code></li>
+      <li>按列求和，压缩行 <code>np.mean(arr,axis=0)</code></li>
+      <li>求每列的极值 极大值<code>np.max(arr,axis=0)</code>, 极小值<code>np.min(arr,axis=0)</code></li>
+      <li>全局求最大值<code>np.max(arr,axis=None)</code></li>
+      <li>全局求最小值<code>np.min(arr)</code> 不提供axis时即默认对全局进行运算</li>
+      <li>获取数组的全局信息<code>np.info(arr)</code></li>
+    </ul>
+    <h3 id="numpy-3">numpy的数学函数</h3>
+    <ul>
+      <li>求绝对值 <code>np.abs(arr)</code></li>
+      <li>π值 <code>np.pi</code><code>theta = np.pi**np.arange(3)</code> π的0,1,2次方。</li>
+      <li>正弦sin值 <code>np.sin(theta)</code></li>
+      <li>余弦cos值 <code>np.cos(theta)</code></li>
+      <li>正切值tan <code>np.tan(theta)</code></li>
+      <li>e的对应数次幂 <code>np.exp(theta)</code></li>
+      <li>ln(x) <code>np.log(arr1)</code></li>
+      <li>log2(X) <code>np.log2(arr1)/np.log(2)</code></li>
+    </ul>
+    <h2 id="list-dataframe">数组和list, DataFrame互相转换</h2>
+    <ul>
+      <li>
+        <p>数组转为列表
+<code>new_arr2.tolist()</code><code>new_arr.tolist()</code></p>
+      </li>
+      <li>
+        <p>数据框转为数组</p>
+      </li>
+    </ul>
+    <pre>
+      <code>df = pd.DataFrame({
+    'A': [1, 2, 3],
+    'B': [4, 5, 6],
+    'C': [7, 8, 9]
+})
+arr=df.to_numpy() #转为数组
+arr2=df.values    #转为数组  
+</code>
+    </pre>
+    <p>注意：数据框转为数组后会丢失列名。</p>
+    <ul>
+      <li>数组转为数据框</li>
+    </ul>
+    <pre>
+      <code>df2=pd.DataFrame(arr,columns=['A','B','C'])
+</code>
+    </pre>
+    <p>此处转为数据框需要提供列名，df2和df的内容一样。但是有的时候数据类型会改变。</p>
+    <p>使用<code>df.dtypes</code>和<code>df2.dtypes</code>查看每列的数据类型。</p>
+    <h2 id="section-19">创建随机数组</h2>
+    <p>
+      <code>np.random.seed(101)</code> #设置随机数的种子
+<em>设置随机数的种子对于科学研究非常重要，可以保证结果可以复现</em></p>
+    <pre>
+      <code>import numpy as np
+np.random.seed(9527)
+a=np.random.randint(0,100,10)
+b=np.random.randint(0,100,10)
+print(a,b)
+</code>
+    </pre>
+    <p>上面的输出结果是：(即使你使用的是不同版本的numpy,也应该输出下面的结果)</p>
+    <pre>
+      <code>[97  8 16 48 76  8 92 48  1 87] [59 84 75 41 34 53 16 24 95 24]
+</code>
+    </pre>
+    <ul>
+      <li>
+        <code>np.random.random(5)</code> #生成5个0-1之间的随机浮点数</li>
+      <li>
+        <code>np.random.randint(1,100,10)</code> #生成10个1到99之间的随机整数</li>
+      <li>
+        <code>np.random.randint(1,100,(2,3))</code> #生成1到99之间的2行3列的随机整数</li>
+      <li>
+        <code>np.random.randn(5)</code> #生成均值是0，标准差是1的随机浮点数5个</li>
+      <li>
+        <code>np.random.randn(5,3)</code> #生成均值是0，标准差是1的随机浮点数5行，3列。</li>
+      <li>
+        <code>np.random.normal(75,25,(2,3))</code> #生成均值是75，标准差是25的2行3列的随机浮点数</li>
+    </ul>
+    <h3 id="section-20">从指定数组随机抽样</h3>
+    <pre>
+      <code>str_num = [2,1,'a','f','l','3','o','!','A','B','@']
+np.random.choice(str_num,size=8,replace=True)  #有放回的随机抽取8个值，所以可能会有重复的字符串
+np.random.choice(str_num,size=8,replace=False)  #随机抽取8个值，每个值只能被抽到1次
+</code>
+    </pre>
+    <ul>
+      <li>随机生成6位数的数字密码</li>
+    </ul>
+    <pre>
+      <code>num_arr=np.arange(0,10)  #生成0-9这10个整数
+np.random.choice(num_arr,size=6) #这就生成了6位随机数
+</code>
+    </pre>
+    <ul>
+      <li>随机生成包含数字、大写字母、小写字母、特殊符号的最少8位的密码</li>
+    </ul>
+    <pre>
+      <code>import numpy as np
+def get_strong_password(seed,pass_length=8):
+	np.random.seed(seed)
+	if pass_length &lt; 8:
+		raise ValueError("密码的程度至少为8")
+	#定义4种不同类型的数组
+	digits = np.array(list('0123456789'))
+	uppercase = np.array(list('ABCDEFGHIJKLMNOPQRSTUVWXYZ'))
+	lowercase = np.array(list('abcdefghijklmnopqrstuvwxyz'))
+	symbols = np.array(list('+-/!@#$%^&amp;*?[]{}'))
+
+	#每种类型的数组随机抽取1个，即每个类型的最少出现1次
+	part1=np.concatenate([
+		np.random.choice(digits,size=1,replace=True),
+		np.random.choice(uppercase,size=1,replace=True),
+		np.random.choice(lowercase,size=1,replace=True),
+		np.random.choice(symbols,size=1,replace=True)
+	])
+	#计算数组的长度
+	part1_len=part1.size #获取一维数组的长度
+	part2_len=pass_length - part1_len #获取还需要生成多少位字符
+	#合并所有的类型到一个一维数组
+	total_str = np.concatenate([digits,uppercase,lowercase,symbols])
+	#抽取剩余的位数的字符串
+	part2=np.random.choice(total_str,size=part2_len)
+
+	#合并part1和part2
+	password=np.concatenate([part1,part2])
+	#打乱数组元素的顺序
+	np.random.shuffle(password)
+	#转为字符串
+	return ''.join(password)
+
+mima=get_strong_password(seed=101,pass_length=12)
+print(mima)
+</code>
+    </pre>
+    <p>上面就是一个完整的生成强密码的随机数程序，每次用户只要使用相同的seed和pass_length位数，就能获得同一个密码。</p>
+    <ul>
+      <li>指定权重的抽样</li>
+    </ul>
+    <pre>
+      <code>weights = [0.99,0.009,0.0009,0.0001]
+arr=['三等奖','二等奖','一等奖','特等奖']
+score=np.random.choice(arr,size=10,p=weights)
+</code>
+    </pre>
+    <p>这样一个抽奖系统的底层逻辑就写好了，权重数组weights的总和必须等于1.此处你抽到特等奖的概率就是万里挑一。
+你还怕有人抽到特等奖，那就直接给它的权重设置为0.</p>
+  </body>
+</html>
